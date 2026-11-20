@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction ledger entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "date": { "type": "string", "minLength": 4, "maxLength": 32 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "mode": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "status": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "referenceNumber": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "accountId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "date", "description", "amount", "type", "createdAt", "updatedAt"]
+    },
+    "application": {
+      "title": "Application",
+      "description": "Loan origination application",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "submittedDate": { "type": "string", "minLength": 4, "maxLength": 32 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "amount", "status", "submittedDate", "createdAt", "updatedAt"]
+    },
+    "salesInvoice": {
+      "title": "Sales Invoice",
+      "description": "Receivable sales invoice",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "invoiceNumber": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "date": { "type": "string", "minLength": 4, "maxLength": 32 },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "customer": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "invoiceNumber", "date", "amount", "status", "createdAt", "updatedAt"]
+    },
+    "purchaseBill": {
+      "title": "Purchase Bill",
+      "description": "Payable vendor purchase bill",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "billNumber": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "date": { "type": "string", "minLength": 4, "maxLength": 32 },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "vendor": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "billNumber", "date", "amount", "status", "createdAt", "updatedAt"]
+    },
+    "adminRecord": {
+      "title": "Admin Record",
+      "description": "Verified platform administrator registry",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": "transaction",
+      "description": "Financial transactions collection"
+    },
+    "/applications/{applicationId}": {
+      "schema": "application",
+      "description": "Loan applications collection"
+    },
+    "/salesInvoices/{invoiceId}": {
+      "schema": "salesInvoice",
+      "description": "Sales invoices collection"
+    },
+    "/purchaseBills/{billId}": {
+      "schema": "purchaseBill",
+      "description": "Purchase bills collection"
+    },
+    "/admins/{userId}": {
+      "schema": "adminRecord",
+      "description": "Verified administrator role registry"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '../utils/formatters';
-import { TransactionType } from '../types';
+import { TransactionType } from '../views/types';
 
 interface TransactionAmountProps {
   amount: number;

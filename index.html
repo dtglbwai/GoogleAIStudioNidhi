@@ -4,32 +4,60 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>ifincaplen - MSME Finance & Auto Leasing</title>
+    <meta name="theme-color" content="#0f766e" />
+    <title>Trueifincaplen - NBFC &amp; Co-operative Banking Suite</title>
+    <meta name="description" content="Enterprise SaaS platform for Non-Banking Financial Companies, Co-operative Credit Societies, and Core Banking Systems." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..600&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
+              display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+              sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+              mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
             },
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '0%': { opacity: '0', transform: 'translateY(6px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
             },
             animation: {
-              'fade-in': 'fadeIn 0.3s ease-out forwards',
+              'fade-in': 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             },
           },
         },
       }
     </script>
+    <style>
+      :root {
+        --df-canvas: #f8fafc;
+        --df-surface: #ffffff;
+        --df-surface-subtle: #f1f5f9;
+        --df-border: #e2e8f0;
+        --df-text: #0f172a;
+        --df-muted: #475569;
+        --df-accent: #0f766e;
+      }
+      body {
+        background-color: var(--df-canvas);
+        color: var(--df-text);
+        font-family: "DM Sans", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      h1, h2, h3, .font-display {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        text-wrap: balance;
+      }
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
@@ -40,8 +68,8 @@
   }
 }
 </script>
-</head>
-  <body class="bg-gray-50 font-sans">
+  </head>
+  <body class="font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

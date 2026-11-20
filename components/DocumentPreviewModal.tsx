@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Document } from '../types';
+import type { Document } from '../views/types';
 import DocumentIcon from './icons/DocumentIcon';
 
 interface DocumentPreviewModalProps {

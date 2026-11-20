@@ -1,13 +1,16 @@
-import React from 'react';
-import MoneyIcon from '../components/icons/MoneyIcon';
-import FileIcon from '../components/icons/FileIcon';
-import UserIcon from '../components/icons/UserIcon';
-import ReportsIcon from '../components/icons/ReportsIcon';
-import CashAndBankIcon from '../components/icons/CashAndBankIcon';
 
-const ReportCard: React.FC<{ title: string; description: string; icon: React.ReactNode }> = ({ title, description, icon }) => (
-    <button className="bg-white p-6 rounded-xl shadow-md text-left hover:shadow-lg hover:border-primary border-transparent border transition-all flex items-start space-x-4">
-        <div className="bg-primary-light p-3 rounded-lg text-primary">
+import React from 'react';
+import DataTable, { Column } from '../components/DataTable';
+import type { ComplianceTask } from './types';
+import { ComplianceTaskStatus } from './types';
+import StatusBadge from '../components/StatusBadge';
+import { useAppContext } from '../AppContext';
+import ReportsIcon from '../components/icons/ReportsIcon';
+import FileIcon from '../components/icons/FileIcon';
+
+const ReportCard: React.FC<{ title: string; description: string; icon: React.ReactNode; onGenerate: () => void; }> = ({ title, description, icon, onGenerate }) => (
+    <button onClick={onGenerate} className="bg-white p-6 rounded-xl shadow-md text-left hover:shadow-lg hover:border-primary border-transparent border transition-all flex items-start space-x-4 w-full">
+        <div className="bg-primary-light p-3 rounded-lg text-primary flex-shrink-0">
             {icon}
         </div>
         <div>
@@ -17,32 +20,52 @@ const ReportCard: React.FC<{ title: string; description: string; icon: React.Rea
     </button>
 );
 
+
 const Reports: React.FC = () => {
+  const { complianceTasks, currentUser } = useAppContext();
+
+  const columns: Column<ComplianceTask>[] = [
+    { header: 'Task', accessor: 'title' },
+    { header: 'Type', accessor: 'type' },
+    { header: 'Due Date', accessor: 'dueDate' },
+    { header: 'Status', accessor: 'status', render: (row: ComplianceTask) => <StatusBadge status={row.status} /> },
+    { header: 'Actions', accessor: 'id', render: (row: ComplianceTask) => currentUser !== 'Auditor' ? <button className="font-semibold text-primary hover:text-primary-dark">Update Status</button> : <span className="text-xs text-gray-400">Read-only</span> },
+  ];
+
   return (
     <div className="animate-fade-in">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">Business & Accounting Reports</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-6">Compliance & Reports</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <h3 className="text-xl font-semibold text-gray-700 col-span-full">General Reports</h3>
-        <ReportCard title="Day Book" description="All transactions for a selected day." icon={<FileIcon />} />
-        <ReportCard title="Cash & Bank Book" description="View cash flow and bank transactions." icon={<CashAndBankIcon />} />
-        <ReportCard title="All Transactions" description="A complete log of all journal entries." icon={<ReportsIcon />} />
-        
-        <h3 className="text-xl font-semibold text-gray-700 col-span-full mt-4">Receivables & Payables</h3>
-        <ReportCard title="Debtors Ledger" description="Outstanding balances from customers." icon={<UserIcon />} />
-        <ReportCard title="Creditors Ledger" description="Amounts owed to suppliers." icon={<UserIcon />} />
-        <ReportCard title="Party Statement" description="View transaction history for a party." icon={<UserIcon />} />
+      <div className="mb-8">
+        <DataTable
+          columns={columns}
+          data={complianceTasks}
+          title="Compliance Calendar & Checklist"
+        />
+      </div>
 
-        <h3 className="text-xl font-semibold text-gray-700 col-span-full mt-4">Final Statements</h3>
-        <ReportCard title="Profit & Loss" description="View income, expenses, and profit." icon={<MoneyIcon />} />
-        <ReportCard title="Balance Sheet" description="Assets, liabilities, and equity." icon={<ReportsIcon />} />
-        <ReportCard title="Trial Balance" description="Check debit/credit balance totals." icon={<ReportsIcon />} />
-        
-        <h3 className="text-xl font-semibold text-gray-700 col-span-full mt-4">GST Reports (Compliance)</h3>
-        <ReportCard title="GSTR-1" description="Summary of all outward supplies." icon={<FileIcon />} />
-        <ReportCard title="GSTR-3B" description="Summary of monthly returns." icon={<FileIcon />} />
-        <ReportCard title="All Parties GSTIN" description="List of all parties with GSTIN." icon={<UserIcon />} />
-
+      <div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-4">Report Generation Center</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ReportCard 
+                title="Asset-Liability Management (ALM)" 
+                description="Generate ALM statement as per RBI guidelines." 
+                icon={<ReportsIcon />}
+                onGenerate={() => alert('Generating ALM Report... (Data simulation)')}
+            />
+             <ReportCard 
+                title="MCA Annual Filings Data" 
+                description="Prepare data pack for AOC-4 and MGT-7 filings." 
+                icon={<FileIcon />}
+                onGenerate={() => alert('Preparing data for MCA filings... (Data simulation)')}
+            />
+            <ReportCard 
+                title="RBI NBS-7 Return" 
+                description="Quarterly return on prudential norms." 
+                icon={<FileIcon />}
+                onGenerate={() => alert('Generating NBS-7 Return... (Data simulation)')}
+            />
+        </div>
       </div>
     </div>
   );

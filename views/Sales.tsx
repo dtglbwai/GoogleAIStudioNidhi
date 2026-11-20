@@ -1,44 +1,34 @@
 import React, { useState } from 'react';
-import DataTable from '../components/DataTable';
-import type { SalesInvoice, Quotation } from '../types';
-import { InvoiceStatus } from '../types';
+import DataTable, { Column } from '../components/DataTable';
+import type { SalesInvoice, Quotation } from './types';
+import { InvoiceStatus } from './types';
 import StatusBadge from '../components/StatusBadge';
 import { formatCurrency } from '../utils/formatters';
-
-const mockInvoices: SalesInvoice[] = [
-  { id: 'inv-1', invoiceNumber: 'INV-2023-001', partyId: 'p-1', partyName: 'Global Tech Inc.', date: '2023-06-10', dueDate: '2023-07-10', lineItems: [], subTotal: 150000, gstAmount: 27000, totalAmount: 177000, amountPaid: 177000, status: InvoiceStatus.PAID },
-  { id: 'inv-2', invoiceNumber: 'INV-2023-002', partyId: 'p-2', partyName: 'Local Hardware', date: '2023-06-11', dueDate: '2023-07-11', lineItems: [], subTotal: 45000, gstAmount: 8100, totalAmount: 53100, amountPaid: 0, status: InvoiceStatus.UNPAID },
-  { id: 'inv-3', invoiceNumber: 'INV-2023-003', partyId: 'p-3', partyName: 'Creative Designs', date: '2023-06-12', dueDate: '2023-07-12', lineItems: [], subTotal: 75000, gstAmount: 13500, totalAmount: 88500, amountPaid: 40000, status: InvoiceStatus.PARTIALLY_PAID },
-  { id: 'inv-4', invoiceNumber: 'INV-2023-004', partyId: 'p-1', partyName: 'Global Tech Inc.', date: '2023-06-15', dueDate: '2023-07-15', lineItems: [], subTotal: 220000, gstAmount: 39600, totalAmount: 259600, amountPaid: 0, status: InvoiceStatus.UNPAID },
-];
-
-const mockQuotations: Quotation[] = [
-    { id: 'qt-1', quotationNumber: 'QT-2023-001', partyId: 'p-4', partyName: 'New Leads Ltd.', date: '2023-06-05', expiryDate: '2023-06-20', lineItems: [], subTotal: 500000, gstAmount: 90000, totalAmount: 590000, status: 'Sent' },
-    { id: 'qt-2', quotationNumber: 'QT-2023-002', partyId: 'p-2', partyName: 'Local Hardware', date: '2023-06-08', expiryDate: '2023-06-23', lineItems: [], subTotal: 120000, gstAmount: 21600, totalAmount: 141600, status: 'Accepted' },
-];
+import { useAppContext } from '../AppContext';
 
 const Sales: React.FC = () => {
+  const { salesInvoices, quotations, currentUser } = useAppContext();
   const [activeTab, setActiveTab] = useState<'invoices' | 'quotations'>('invoices');
 
-  const invoiceColumns = [
-    { header: 'Invoice #', accessor: 'invoiceNumber' as keyof SalesInvoice },
-    { header: 'Party Name', accessor: 'partyName' as keyof SalesInvoice },
-    { header: 'Date', accessor: 'date' as keyof SalesInvoice },
-    { header: 'Due Date', accessor: 'dueDate' as keyof SalesInvoice },
-    { header: 'Total Amount', accessor: 'totalAmount' as keyof SalesInvoice, render: (row: SalesInvoice) => formatCurrency(row.totalAmount) },
-    { header: 'Balance Due', accessor: 'id' as keyof SalesInvoice, render: (row: SalesInvoice) => formatCurrency(row.totalAmount - row.amountPaid) },
-    { header: 'Status', accessor: 'status' as keyof SalesInvoice, render: (row: SalesInvoice) => <StatusBadge status={row.status} /> },
-    { header: 'Actions', accessor: 'id' as keyof SalesInvoice, render: (row: SalesInvoice) => <button className="font-semibold text-primary hover:text-primary-dark">View</button> },
+  const invoiceColumns: Column<SalesInvoice>[] = [
+    { header: 'Invoice #', accessor: 'invoiceNumber' },
+    { header: 'Party Name', accessor: 'partyName' },
+    { header: 'Date', accessor: 'date' },
+    { header: 'Due Date', accessor: 'dueDate' },
+    { header: 'Total Amount', accessor: 'totalAmount', render: (row: SalesInvoice) => formatCurrency(row.totalAmount) },
+    { header: 'Balance Due', accessor: 'id', render: (row: SalesInvoice) => formatCurrency(row.totalAmount - row.amountPaid) },
+    { header: 'Status', accessor: 'status', render: (row: SalesInvoice) => <StatusBadge status={row.status} /> },
+    { header: 'Actions', accessor: 'id', render: (row: SalesInvoice) => <button className="font-semibold text-primary hover:text-primary-dark">View</button> },
   ];
 
-  const quotationColumns = [
-    { header: 'Quotation #', accessor: 'quotationNumber' as keyof Quotation },
-    { header: 'Party Name', accessor: 'partyName' as keyof Quotation },
-    { header: 'Date', accessor: 'date' as keyof Quotation },
-    { header: 'Expiry Date', accessor: 'expiryDate' as keyof Quotation },
-    { header: 'Total Amount', accessor: 'totalAmount' as keyof Quotation, render: (row: Quotation) => formatCurrency(row.totalAmount) },
-    { header: 'Status', accessor: 'status' as keyof Quotation, render: (row: Quotation) => <span className="text-sm font-medium">{row.status}</span> },
-    { header: 'Actions', accessor: 'id' as keyof Quotation, render: (row: Quotation) => <button className="font-semibold text-primary hover:text-primary-dark">View</button> },
+  const quotationColumns: Column<Quotation>[] = [
+    { header: 'Quotation #', accessor: 'quotationNumber' },
+    { header: 'Party Name', accessor: 'partyName' },
+    { header: 'Date', accessor: 'date' },
+    { header: 'Expiry Date', accessor: 'expiryDate' },
+    { header: 'Total Amount', accessor: 'totalAmount', render: (row: Quotation) => formatCurrency(row.totalAmount) },
+    { header: 'Status', accessor: 'status', render: (row: Quotation) => <span className="text-sm font-medium">{row.status}</span> },
+    { header: 'Actions', accessor: 'id', render: (row: Quotation) => <button className="font-semibold text-primary hover:text-primary-dark">View</button> },
   ];
 
   const TabButton: React.FC<{ view: 'invoices' | 'quotations', label: string }> = ({ view, label }) => (
@@ -60,17 +50,17 @@ const Sales: React.FC = () => {
       {activeTab === 'invoices' && (
         <DataTable
           columns={invoiceColumns}
-          data={mockInvoices}
+          data={salesInvoices}
           title="All Sales Invoices"
-          actionButton={<button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Create Invoice</button>}
+          actionButton={currentUser !== 'Auditor' ? <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Create Invoice</button> : null}
         />
       )}
       {activeTab === 'quotations' && (
         <DataTable
           columns={quotationColumns}
-          data={mockQuotations}
+          data={quotations}
           title="All Quotations"
-          actionButton={<button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Create Quotation</button>}
+          actionButton={currentUser !== 'Auditor' ? <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Create Quotation</button> : null}
         />
       )}
     </div>

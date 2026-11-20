@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-interface Column<T> {
+export interface Column<T> {
   header: string;
   accessor: keyof T;
   render?: (row: T) => React.ReactNode;
@@ -14,66 +14,99 @@ interface DataTableProps<T> {
   itemsPerPage?: number;
 }
 
-const DataTable = <T extends { id: string }>(
-  { columns, data, title, actionButton, itemsPerPage = 10 }: DataTableProps<T>
-) => {
+const DataTable = <T extends { id: string }>({
+  columns,
+  data,
+  title,
+  actionButton,
+  itemsPerPage = 10,
+}: DataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedData = data.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (safePage < totalPages) {
+      setCurrentPage(safePage + 1);
     }
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    if (safePage > 1) {
+      setCurrentPage(safePage - 1);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md">
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-            {actionButton}
-        </div>
+    <div className="bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-[var(--df-border)] flex flex-wrap justify-between items-center gap-4">
+        <h3 className="font-display text-base font-bold text-[var(--df-text)]">{title}</h3>
+        {actionButton}
+      </div>
+
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+        <table className="w-full text-xs text-left text-[var(--df-muted)]">
+          <thead className="bg-[var(--df-surface-subtle)] text-[var(--df-text)] border-b border-[var(--df-border)]">
             <tr>
-              {columns.map((col) => (
-                <th key={String(col.accessor)} scope="col" className="px-6 py-3">
+              {columns.map(col => (
+                <th key={String(col.accessor)} scope="col" className="px-5 py-3 font-semibold whitespace-nowrap">
                   {col.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
-            {paginatedData.map((row) => (
-              <tr key={row.id} className="bg-white border-b hover:bg-gray-50">
-                {columns.map((col) => (
-                  <td key={String(col.accessor)} className="px-6 py-4">
-                    {col.render ? col.render(row) : String(row[col.accessor])}
-                  </td>
-                ))}
+          <tbody className="divide-y divide-[var(--df-border)]">
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-5 py-10 text-center text-xs text-[var(--df-muted)]">
+                  No records match the current view.
+                </td>
               </tr>
-            ))}
+            ) : (
+              paginatedData.map(row => (
+                <tr key={row.id} className="hover:bg-[var(--df-surface-subtle)]/60 transition-colors">
+                  {columns.map(col => (
+                    <td key={String(col.accessor)} className="px-5 py-3 text-[var(--df-text)] tabular-nums">
+                      {col.render ? col.render(row) : String(row[col.accessor] ?? '')}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between items-center mt-4">
-          <span className="text-sm text-gray-700">
-            Showing <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold">{Math.min(currentPage * itemsPerPage, data.length)}</span> of <span className="font-semibold">{data.length}</span> Entries
-          </span>
-        <div className="flex items-center">
-          <button onClick={handlePrevPage} disabled={currentPage === 1} className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+
+      <div className="px-6 py-3.5 border-t border-[var(--df-border)] flex flex-wrap justify-between items-center gap-3 text-xs text-[var(--df-muted)]">
+        <span className="tabular-nums">
+          {data.length === 0 ? (
+            '0 entries'
+          ) : (
+            <>
+              Showing <span className="font-semibold text-[var(--df-text)]">{(safePage - 1) * itemsPerPage + 1}</span> to{' '}
+              <span className="font-semibold text-[var(--df-text)]">{Math.min(safePage * itemsPerPage, data.length)}</span> of{' '}
+              <span className="font-semibold text-[var(--df-text)]">{data.length}</span> entries
+            </>
+          )}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrevPage}
+            disabled={safePage === 1}
+            className="px-3 py-1.5 text-xs font-medium text-[var(--df-text)] bg-[var(--df-surface)] border border-[var(--df-border)] rounded-lg hover:bg-[var(--df-surface-subtle)] disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
+          >
             Previous
           </button>
-          <span className="mx-3 text-sm">{currentPage} / {totalPages}</span>
-          <button onClick={handleNextPage} disabled={currentPage === totalPages} className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span className="px-2 font-mono tabular-nums text-[var(--df-text)]">
+            {safePage} / {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={safePage === totalPages}
+            className="px-3 py-1.5 text-xs font-medium text-[var(--df-text)] bg-[var(--df-surface)] border border-[var(--df-border)] rounded-lg hover:bg-[var(--df-surface-subtle)] disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
+          >
             Next
           </button>
         </div>

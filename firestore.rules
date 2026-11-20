@@ -1,0 +1,238 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny global catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Shared hardened primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'dtglbw@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isNonEmptyBoundedString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    // Validation blueprint: Transaction
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'date', 'description', 'amount', 'type', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'date', 'description', 'amount', 'type', 'mode', 'status', 'referenceNumber', 'accountId', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.date, 4, 32)
+        && isNonEmptyBoundedString(data.description, 1, 500)
+        && (data.amount is int || data.amount is float)
+        && data.amount >= 0
+        && isNonEmptyBoundedString(data.type, 1, 64)
+        && (!('mode' in data) || isNonEmptyBoundedString(data.mode, 1, 64))
+        && (!('status' in data) || isNonEmptyBoundedString(data.status, 1, 32))
+        && (!('referenceNumber' in data) || isNonEmptyBoundedString(data.referenceNumber, 1, 128))
+        && (!('accountId' in data) || isValidId(data.accountId))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation blueprint: Application
+    function isValidApplication(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'amount', 'status', 'submittedDate', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'amount', 'status', 'submittedDate', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && (data.amount is int || data.amount is float)
+        && data.amount >= 0
+        && isNonEmptyBoundedString(data.status, 1, 32)
+        && isNonEmptyBoundedString(data.submittedDate, 4, 32)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation blueprint: Sales Invoice
+    function isValidSalesInvoice(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'invoiceNumber', 'date', 'amount', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'invoiceNumber', 'date', 'amount', 'status', 'customer', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.invoiceNumber, 1, 64)
+        && isNonEmptyBoundedString(data.date, 4, 32)
+        && (data.amount is int || data.amount is float)
+        && data.amount >= 0
+        && isNonEmptyBoundedString(data.status, 1, 32)
+        && (!('customer' in data) || isNonEmptyBoundedString(data.customer, 1, 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation blueprint: Purchase Bill
+    function isValidPurchaseBill(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'billNumber', 'date', 'amount', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'billNumber', 'date', 'amount', 'status', 'vendor', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.billNumber, 1, 64)
+        && isNonEmptyBoundedString(data.date, 4, 32)
+        && (data.amount is int || data.amount is float)
+        && data.amount >= 0
+        && isNonEmptyBoundedString(data.status, 1, 32)
+        && (!('vendor' in data) || isNonEmptyBoundedString(data.vendor, 1, 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Admin registry collection (immutable except bootstrapped super admin)
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && isVerifiedUser() && (request.auth.uid == userId || isBootstrappedAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isValidId(userId) && isBootstrappedAdmin()
+        && incoming().keys().hasAll(['uid', 'createdAt'])
+        && incoming().keys().hasOnly(['uid', 'createdAt'])
+        && incoming().uid == userId
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(userId) && isBootstrappedAdmin();
+    }
+
+    // Transactions collection
+    match /transactions/{transactionId} {
+      allow get: if isValidId(transactionId) && isVerifiedUser() && (isAdmin() || existing().ownerId == request.auth.uid);
+      allow list: if isVerifiedUser() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedUser()
+        && isValidId(transactionId)
+        && isValidTransaction(incoming())
+        && incoming().id == transactionId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(transactionId)
+        && isValidTransaction(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            existing().ownerId == request.auth.uid
+            && !('status' in existing() && (existing().status == 'Completed' || existing().status == 'Reversed'))
+            && incoming().diff(existing()).affectedKeys().hasOnly(['description', 'mode', 'status', 'referenceNumber', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(transactionId) && isVerifiedUser() && isAdmin();
+    }
+
+    // Applications collection
+    match /applications/{applicationId} {
+      allow get: if isValidId(applicationId) && isVerifiedUser() && (isAdmin() || existing().ownerId == request.auth.uid);
+      allow list: if isVerifiedUser() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedUser()
+        && isValidId(applicationId)
+        && isValidApplication(incoming())
+        && incoming().id == applicationId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(applicationId)
+        && isValidApplication(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            existing().ownerId == request.auth.uid
+            && existing().status != 'Approved'
+            && existing().status != 'Rejected'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'status', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(applicationId) && isVerifiedUser() && isAdmin();
+    }
+
+    // Sales Invoices collection
+    match /salesInvoices/{invoiceId} {
+      allow get: if isValidId(invoiceId) && isVerifiedUser() && (isAdmin() || existing().ownerId == request.auth.uid);
+      allow list: if isVerifiedUser() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedUser()
+        && isValidId(invoiceId)
+        && isValidSalesInvoice(incoming())
+        && incoming().id == invoiceId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(invoiceId)
+        && isValidSalesInvoice(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            existing().ownerId == request.auth.uid
+            && existing().status != 'Paid'
+            && existing().status != 'Cancelled'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'status', 'customer', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(invoiceId) && isVerifiedUser() && isAdmin();
+    }
+
+    // Purchase Bills collection
+    match /purchaseBills/{billId} {
+      allow get: if isValidId(billId) && isVerifiedUser() && (isAdmin() || existing().ownerId == request.auth.uid);
+      allow list: if isVerifiedUser() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedUser()
+        && isValidId(billId)
+        && isValidPurchaseBill(incoming())
+        && incoming().id == billId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(billId)
+        && isValidPurchaseBill(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            existing().ownerId == request.auth.uid
+            && existing().status != 'Paid'
+            && existing().status != 'Cancelled'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'status', 'vendor', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(billId) && isVerifiedUser() && isAdmin();
+    }
+  }
+}
