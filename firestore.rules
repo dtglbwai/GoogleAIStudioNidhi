@@ -234,5 +234,144 @@ service cloud.firestore {
         );
       allow delete: if isValidId(billId) && isVerifiedUser() && isAdmin();
     }
+
+    // Validation blueprint: Branch
+    function isValidBranch(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'branchCode', 'name', 'syncStatus', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'branchCode', 'name', 'region', 'hqSyncMode', 'syncStatus', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.branchCode, 2, 32)
+        && isNonEmptyBoundedString(data.name, 1, 200)
+        && (!('region' in data) || isNonEmptyBoundedString(data.region, 1, 128))
+        && (!('hqSyncMode' in data) || isNonEmptyBoundedString(data.hqSyncMode, 1, 64))
+        && isNonEmptyBoundedString(data.syncStatus, 1, 32)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation blueprint: Module Entitlement
+    function isValidModuleEntitlement(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'preset', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'preset', 'updatedBy', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.preset, 1, 64)
+        && (!('updatedBy' in data) || isNonEmptyBoundedString(data.updatedBy, 1, 128))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation blueprint: Backup Snapshot Metadata
+    function isValidBackupSnapshot(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'label', 'sha256', 'totalRecords', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'label', 'sha256', 'totalRecords', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.label, 1, 200)
+        && isNonEmptyBoundedString(data.sha256, 64, 64)
+        && (data.totalRecords is int || data.totalRecords is float)
+        && data.totalRecords >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation blueprint: Migration Batch
+    function isValidMigrationBatch(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'targetEntity', 'status', 'insertedRows', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'targetEntity', 'status', 'insertedRows', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && isNonEmptyBoundedString(data.targetEntity, 1, 64)
+        && isNonEmptyBoundedString(data.status, 1, 32)
+        && (data.insertedRows is int || data.insertedRows is float)
+        && data.insertedRows >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Branches collection (HQ-synchronized)
+    match /branches/{branchId} {
+      allow get: if isValidId(branchId) && isVerifiedUser() && (isAdmin() || existing().ownerId == request.auth.uid);
+      allow list: if isVerifiedUser() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedUser()
+        && isValidId(branchId)
+        && isValidBranch(incoming())
+        && incoming().id == branchId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(branchId)
+        && isValidBranch(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow delete: if isValidId(branchId) && isVerifiedUser() && isAdmin();
+    }
+
+    // Module entitlements (Super Admin governance)
+    match /moduleEntitlements/{tenantId} {
+      allow get: if isValidId(tenantId) && isVerifiedUser() && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isValidId(tenantId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidModuleEntitlement(incoming())
+        && incoming().id == tenantId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(tenantId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidModuleEntitlement(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if isValidId(tenantId) && isVerifiedUser() && isAdmin();
+    }
+
+    // Backup snapshot audit metadata
+    match /backupSnapshots/{snapshotId} {
+      allow get: if isValidId(snapshotId) && isVerifiedUser() && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isValidId(snapshotId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidBackupSnapshot(incoming())
+        && incoming().id == snapshotId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(snapshotId) && isVerifiedUser() && isAdmin();
+    }
+
+    // Migration batch audit log
+    match /migrationBatches/{batchId} {
+      allow get: if isValidId(batchId) && isVerifiedUser() && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isValidId(batchId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidMigrationBatch(incoming())
+        && incoming().id == batchId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(batchId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidMigrationBatch(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
   }
 }

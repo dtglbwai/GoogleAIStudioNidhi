@@ -6,6 +6,7 @@ import { useBranding } from './BrandingContext';
 import { darkenColor, DESIGN_THEMES } from './colors';
 import { useAppContext } from './AppContext';
 import { View, AppModule } from './views/types';
+import { PROJECT_OWNERSHIP } from './lib/ownership';
 
 // Import all views
 import Dashboard from './views/Dashboard';
@@ -349,10 +350,16 @@ const MainLayout: React.FC = () => {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden ml-36">
         <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[var(--df-canvas)] p-6 lg:p-8">
-          <div className="max-w-[1440px] mx-auto">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[var(--df-canvas)] p-6 lg:p-8 flex flex-col justify-between">
+          <div className="max-w-[1440px] mx-auto w-full">
             {renderView()}
           </div>
+          <footer className="max-w-[1440px] mx-auto w-full mt-10 pt-4 border-t border-[var(--df-border)] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--df-muted)]">
+            <span>Centralized HQ SaaS Banking Core · Normalized 3NF Entity Store</span>
+            <span className="font-mono">
+              Ownership Code: {PROJECT_OWNERSHIP.ownershipCode} · {PROJECT_OWNERSHIP.ownerEmail}
+            </span>
+          </footer>
         </main>
       </div>
     </div>

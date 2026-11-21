@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from "@google/genai";
 import dotenv from 'dotenv';
+import { PROJECT_OWNERSHIP } from './lib/ownership';
 
 dotenv.config();
 
@@ -224,6 +225,7 @@ async function startServer() {
       aiEncapsulation: 'enforced',
       bodyLimit: '256kb',
       rateLimitPerMin: RATE_MAX_REQUESTS,
+      ownership: PROJECT_OWNERSHIP,
     });
   });
 
@@ -238,6 +240,7 @@ async function startServer() {
       uptimeSeconds: Math.round(process.uptime()),
       productionDistReady: distBuilt,
       geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+      ownership: PROJECT_OWNERSHIP,
       controls: {
         xPoweredByDisabled: true,
         securityHeaders: [
@@ -324,6 +327,7 @@ async function startServer() {
       architectureMode: 'Centralized HQ Server Cluster + Multi-Branch Thin Edge',
       databaseTopology: '3NF Normalized Entity Store + Firestore Long-Polling Sync',
       hqServerReady: true,
+      ownership: PROJECT_OWNERSHIP,
       pillars: [
         {
           id: 'anti-hacking',

@@ -1,6 +1,6 @@
 {
   "name": "Trueifincaplen - NBFC SAAS APPLICATION ",
-  "description": "A comprehensive SaaS platform for Non-Banking Financial Companies (NBFCs) and Microfinance Institutions (MFIs), featuring compliance, loan management, advanced analytics, and AI-driven business strategy assistance.",
+  "description": "A comprehensive SaaS platform for Non-Banking Financial Companies (NBFCs), Co-operative Societies, and Core Banking Systems. Registered Ownership Code: SGSR14061977820DLVR (dtglbw@gmail.com).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -11,10 +11,27 @@ import {
   Play,
   Activity,
   Server,
+  Layers,
 } from 'lucide-react';
 import CyberSecurityIcon from '../components/icons/CyberSecurityIcon';
+import { PROJECT_OWNERSHIP } from '../lib/ownership';
 
-type SecurityTab = 'airlock' | 'safeguards' | 'telemetry';
+type SecurityTab = 'airlock' | 'safeguards' | 'telemetry' | 'posture';
+
+interface ArchitecturePillar {
+  id: string;
+  name: string;
+  status: string;
+  evidence: string;
+}
+
+interface ArchitecturePosture {
+  architectureMode: string;
+  databaseTopology: string;
+  hqServerReady: boolean;
+  ownership?: { ownershipCode: string; ownerEmail: string };
+  pillars: ArchitecturePillar[];
+}
 
 interface ServerSafeguardSummary {
   aiKeyServerOnly: boolean;
@@ -178,6 +195,7 @@ const CyberSecurity: React.FC = () => {
   // Live server telemetry state
   const [serverSafeguards, setServerSafeguards] = useState<ServerSafeguardSummary | null>(null);
   const [gatewayEvents, setGatewayEvents] = useState<SecurityGatewayEvent[]>([]);
+  const [architecturePosture, setArchitecturePosture] = useState<ArchitecturePosture | null>(null);
   const [loadingTelemetry, setLoadingTelemetry] = useState(false);
 
   // AI Airlock live tester state
@@ -191,11 +209,18 @@ const CyberSecurity: React.FC = () => {
   const fetchTelemetry = useCallback(async () => {
     setLoadingTelemetry(true);
     try {
-      const res = await fetch('/api/security/telemetry');
-      if (res.ok) {
-        const data = await res.json();
+      const [telRes, posRes] = await Promise.all([
+        fetch('/api/security/telemetry'),
+        fetch('/api/architecture/posture'),
+      ]);
+      if (telRes.ok) {
+        const data = await telRes.json();
         setServerSafeguards(data.safeguards || null);
         setGatewayEvents(Array.isArray(data.events) ? data.events : []);
+      }
+      if (posRes.ok) {
+        const pos = await posRes.json();
+        setArchitecturePosture(pos);
       }
     } catch {
       // Handled gracefully in UI
@@ -287,6 +312,7 @@ const CyberSecurity: React.FC = () => {
     { id: 'airlock', label: '01. Global AI Encapsulation Airlock', icon: <Lock className="w-4 h-4" /> },
     { id: 'safeguards', label: '02. Vulnerability Safeguard Matrix', icon: <ShieldCheck className="w-4 h-4" /> },
     { id: 'telemetry', label: '03. Server Gateway Audit & Integrity', icon: <Activity className="w-4 h-4" /> },
+    { id: 'posture', label: '04. 6-Pillar Architecture & Ownership', icon: <Layers className="w-4 h-4" /> },
   ];
 
   return (
@@ -712,6 +738,44 @@ const CyberSecurity: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: 6-PILLAR ARCHITECTURAL POSTURE & REGISTERED OWNERSHIP */}
+      {activeTab === 'posture' && (
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Enterprise 6-Pillar SaaS Banking Verification
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Live posture returned by HQ server <span className="font-mono">/api/architecture/posture</span> across all six non-functional and security criteria.
+              </p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-xs font-mono">
+              <div className="text-slate-500 text-[11px]">Registered Ownership Code</div>
+              <div className="font-bold text-slate-900 mt-0.5">
+                {architecturePosture?.ownership?.ownershipCode || PROJECT_OWNERSHIP.ownershipCode} ·{' '}
+                {architecturePosture?.ownership?.ownerEmail || PROJECT_OWNERSHIP.ownerEmail}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(architecturePosture?.pillars || []).map(pillar => (
+              <div key={pillar.id} className="bg-white border border-slate-200 rounded-xl p-5 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-slate-900">{pillar.name}</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-emerald-700 shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {pillar.status}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">{pillar.evidence}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}

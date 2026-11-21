@@ -138,7 +138,7 @@ export const mockAuditFindings: AuditFinding[] = [
 
 export const mockMetadataSettings: MetadataSettings = { siteTitle: 'fincaplen', metaDescription: 'Financial Management Suite', metaKeywords: 'nbfc, lending, leasing', faviconUrl: '' };
 
-export const mockLegalSettings: LegalSettings = { companyLegalName: 'fincaplen Financial Services Pvt. Ltd.', copyrightNotice: '© 2023 fincaplen. All Rights Reserved.', termsOfServiceUrl: '/tos', privacyPolicyUrl: '/privacy' };
+export const mockLegalSettings: LegalSettings = { companyLegalName: 'fincaplen Financial Services Pvt. Ltd. · Ownership Code: SGSR14061977820DLVR', copyrightNotice: '© 2026 fincaplen. Registered Owner: SGSR14061977820DLVR (dtglbw@gmail.com). All Rights Reserved.', termsOfServiceUrl: '/tos', privacyPolicyUrl: '/privacy' };
 
 export const mockBranches: Branch[] = [
     {

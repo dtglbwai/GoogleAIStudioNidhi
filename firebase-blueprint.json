@@ -78,6 +78,67 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "createdAt"]
+    },
+    "branch": {
+      "title": "HQ Branch Node",
+      "description": "Normalized branch entity synchronized with centralized HQ server",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchCode": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "region": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "hqSyncMode": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "syncStatus": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "branchCode", "name", "syncStatus", "createdAt", "updatedAt"]
+    },
+    "moduleEntitlement": {
+      "title": "SaaS Module Entitlement",
+      "description": "Per-client-bank activation/deactivation entitlement matrix",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "preset": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "updatedBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "preset", "createdAt", "updatedAt"]
+    },
+    "backupSnapshot": {
+      "title": "Backup Snapshot",
+      "description": "SHA-256 verified recovery checkpoint metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "sha256": { "type": "string", "minLength": 64, "maxLength": 64 },
+        "totalRecords": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "label", "sha256", "totalRecords", "createdAt", "updatedAt"]
+    },
+    "migrationBatch": {
+      "title": "Migration Batch",
+      "description": "Audit log for atomic ETL migration and rollback batches",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "targetEntity": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "status": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "insertedRows": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "targetEntity", "status", "insertedRows", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
@@ -100,6 +161,22 @@
     "/admins/{userId}": {
       "schema": "adminRecord",
       "description": "Verified administrator role registry"
+    },
+    "/branches/{branchId}": {
+      "schema": "branch",
+      "description": "HQ synchronized regional branches"
+    },
+    "/moduleEntitlements/{tenantId}": {
+      "schema": "moduleEntitlement",
+      "description": "SaaS module activation states per client bank"
+    },
+    "/backupSnapshots/{snapshotId}": {
+      "schema": "backupSnapshot",
+      "description": "Verified database snapshot metadata"
+    },
+    "/migrationBatches/{batchId}": {
+      "schema": "migrationBatch",
+      "description": "Atomic migration audit log"
     }
   }
 }

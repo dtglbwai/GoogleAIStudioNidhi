@@ -7,6 +7,7 @@ import {
 } from './types';
 import { useBranding } from '../BrandingContext';
 import { useAppContext } from '../AppContext';
+import { PROJECT_OWNERSHIP } from '../lib/ownership';
 import { CheckCircle2, Layers, ShieldCheck, Database, GitBranch, Scale } from 'lucide-react';
 
 type SettingView = 'platform' | 'operations' | 'infrastructure' | 'legal';
@@ -542,7 +543,16 @@ const SuperAdminSettings: React.FC = () => {
       case 'legal':
         return (
           <form onSubmit={handleLegalSettingsSave} className="bg-white p-6 lg:p-8 rounded-xl border border-slate-200 space-y-6">
-            <h3 className="text-lg font-bold text-slate-900">Legal Entity &amp; Regulatory Copyright</h3>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Legal Entity &amp; Regulatory Copyright</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Immutable registered project ownership and licensing credentials.</p>
+              </div>
+              <div className="text-right font-mono text-xs bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2">
+                <div className="font-bold text-slate-900">{PROJECT_OWNERSHIP.ownershipCode}</div>
+                <div className="text-slate-600">{PROJECT_OWNERSHIP.ownerEmail}</div>
+              </div>
+            </div>
             <FormField label="Company Legal Name">
               <TextInput value={lglSettings.companyLegalName} onChange={e => setLglSettings({ ...lglSettings, companyLegalName: e.target.value })} />
             </FormField>

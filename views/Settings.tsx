@@ -4,6 +4,7 @@ import { useBranding } from '../BrandingContext';
 import { DESIGN_THEMES, DesignThemeId } from '../colors';
 import LogoIcon from '../components/icons/LogoIcon';
 import { useAppContext } from '../AppContext';
+import { PROJECT_OWNERSHIP } from '../lib/ownership';
 import { CheckCircle2 } from 'lucide-react';
 
 const CommunicationSettings: React.FC<{ onNotify: (msg: string) => void }> = ({ onNotify }) => {
@@ -164,6 +165,11 @@ const Settings: React.FC = () => {
                 {item.label}
               </button>
             ))}
+          </div>
+          <div className="bg-[var(--df-surface)] border border-[var(--df-border)] p-4 rounded-xl mt-4 space-y-1.5 text-xs">
+            <div className="font-semibold text-[var(--df-text)]">Registered Project Ownership</div>
+            <div className="font-mono text-[var(--df-text)] font-bold">{PROJECT_OWNERSHIP.ownershipCode}</div>
+            <div className="font-mono text-[var(--df-muted)]">{PROJECT_OWNERSHIP.ownerEmail}</div>
           </div>
         </aside>
 
